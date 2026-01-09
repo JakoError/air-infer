@@ -1,0 +1,8 @@
+# Core dependencies
+numpy
+nvidia-pytriton>=0.7.0
+tritonclient[grpc]
+
+# Development dependencies (install with: pip install -r requirements-dev.txt)
+# Or use: pip install -e ".[dev]"
+
