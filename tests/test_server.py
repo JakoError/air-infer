@@ -12,4 +12,3 @@ Tests for server module.
 #     assert server.host == "localhost"
 #     assert server.port == 8000
 #     assert not server.running
-

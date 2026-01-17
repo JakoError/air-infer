@@ -12,7 +12,7 @@ class BaseServer:
     This class provides the foundation for handling client requests.
     Subclasses should implement specific communication protocols.
     """
-    
+
     def __init__(self, host: str = "localhost", port: int = 8000):
         """
         Initialize the base server.
@@ -24,15 +24,15 @@ class BaseServer:
         self.host = host
         self.port = port
         self.running = False
-    
+
     def start(self):
         """Start the server."""
         raise NotImplementedError("Subclasses must implement start()")
-    
+
     def stop(self):
         """Stop the server."""
         raise NotImplementedError("Subclasses must implement stop()")
-    
+
     def handle_request(self, request: Dict[str, Any]) -> Dict[str, Any]:
         """
         Handle an incoming request.
@@ -44,7 +44,7 @@ class BaseServer:
             Response dictionary with output tensors
         """
         raise NotImplementedError("Subclasses must implement handle_request()")
-    
+
     def get_input_schema(self) -> List[Any]:
         """
         Define the input tensor schema.
@@ -63,7 +63,7 @@ class BaseServer:
             List of Tensor objects defining input schema
         """
         raise NotImplementedError("Subclasses must implement get_input_schema()")
-    
+
     def get_output_schema(self) -> List[Any]:
         """
         Define the output tensor schema.
@@ -82,7 +82,7 @@ class BaseServer:
             List of Tensor objects defining output schema
         """
         raise NotImplementedError("Subclasses must implement get_output_schema()")
-    
+
     def inference_function(self, **inputs) -> Dict[str, np.ndarray]:
         """
         Inference function that processes inputs and returns outputs.
@@ -111,4 +111,3 @@ class BaseServer:
             Dictionary of output tensors
         """
         raise NotImplementedError("Subclasses must implement inference_function()")
-

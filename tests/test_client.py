@@ -11,4 +11,3 @@ Tests for client module.
 #     client = BaseClient(host="localhost", port=8000)
 #     assert client.host == "localhost"
 #     assert client.port == 8000
-

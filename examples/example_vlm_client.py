@@ -18,7 +18,7 @@ def main():
         lazy_init=False,
         timeout_s=10,
     )
-    
+
     # Use context manager for automatic connection/disconnection
     with client:
         # Example 1: Single PIL Image with additional arguments
@@ -31,7 +31,7 @@ def main():
             max_tokens=100
         )
         print("Result with image:", result)
-        
+
         # Example 2: Multiple media items (images + URL)
         img2 = Image.new('RGB', (224, 224), color='blue')
         result = client.infer(
@@ -40,7 +40,7 @@ def main():
             temperature=0.5
         )
         print("Result with multiple media:", result)
-        
+
         # Example 3: Video (sequence of PIL Images)
         # Note: A sequence of PIL Images is ONE video item in the list
         video_frames = [Image.new('RGB', (224, 224), color='green') for _ in range(10)]
@@ -50,7 +50,7 @@ def main():
             max_tokens=200
         )
         print("Result with video:", result)
-        
+
         # Example 4: Mixed media types
         # Each item in the list is one media item: image, video (sequence), or URL
         result = client.infer(
@@ -68,4 +68,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

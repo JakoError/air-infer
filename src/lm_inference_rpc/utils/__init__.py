@@ -19,6 +19,14 @@ from .vlm_utils import (
     PIL_AVAILABLE,
 )
 
+from .verification import (
+    # Message verification utilities
+    compute_message_checksum,
+    compute_message_hash,
+    verify_message_integrity,
+    verify_message_content,
+)
+
 __all__ = [
     # Core encoding/decoding functions
     "encode_request",
@@ -34,5 +42,9 @@ __all__ = [
     # Constants and types
     "MediaType",
     "PIL_AVAILABLE",
+    # Verification utilities
+    "compute_message_checksum",
+    "compute_message_hash",
+    "verify_message_integrity",
+    "verify_message_content",
 ]
-

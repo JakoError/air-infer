@@ -45,14 +45,16 @@ class VLMTritonServer(BaseServer):
     """
 
     def __init__(
-        self,
-        model_name: str,
-        inference_func: Optional[Callable[..., Dict[str, np.ndarray]]] = None,
-        host: str = "127.0.0.1",
-        grpc_port: int = 9100,
-        http_port: int = 8100,
-        metrics_port: int = 8101,
-        log_verbose: int = 1,
+            self,
+            model_name: str,
+            inference_func: Optional[Callable[..., Dict[str, np.ndarray]]] = None,
+            host: str = "127.0.0.1",
+            grpc_port: int = 9100,
+            http_port: int = 8100,
+            metrics_port: int = 8101,
+            log_verbose: int = 1,
+            enable_grpc: bool = True,
+            enable_http: bool = True,
     ):
         """
         Initialize the Triton server.
@@ -70,14 +72,18 @@ class VLMTritonServer(BaseServer):
             http_port: HTTP port number
             metrics_port: Metrics port number
             log_verbose: Log verbosity level
+            enable_grpc: Enable gRPC protocol (default: True)
+            enable_http: Enable HTTP protocol (default: True)
         """
         super().__init__(host=host, port=grpc_port)
         self.model_name = model_name
         self.inference_func = inference_func
         self.grpc_port = grpc_port
         self.http_port = http_port
-        self.metrics_port = metrics_port    
+        self.metrics_port = metrics_port
         self.log_verbose = log_verbose
+        self.enable_grpc = enable_grpc
+        self.enable_http = enable_http
 
         self._triton: Optional[Triton] = None
         self._triton_config: Optional[TritonConfig] = None
@@ -113,7 +119,7 @@ class VLMTritonServer(BaseServer):
             Tensor(name="VIDEO", dtype=np.uint8,
                    shape=(-1, -1, -1, -1, 3)),  # N_VIDEOS, T, H, W, C
             # Media URL
-            Tensor(name="MEDIA_URLS", dtype=bytes, shape=(-1,)), # URLs list
+            Tensor(name="MEDIA_URLS", dtype=bytes, shape=(-1,)),  # URLs list
             # Media Mask (0: Image, 1: Video, 2: URL, other: unknown)
             Tensor(name="MEDIA_MASK", dtype=np.uint8, shape=(-1,)),  # N_IMAGES + N_VIDEOS + N_URLS
             # Texts or Args in JSON format
@@ -224,7 +230,7 @@ class VLMTritonServer(BaseServer):
 
             # Call the original function with high-level arguments
             result = original_func(media=media, **extra_kwargs)
-                
+
             encoded_result = encode_response(result)
             return encoded_result
 
@@ -237,11 +243,11 @@ class VLMTritonServer(BaseServer):
 
         # Create Triton configuration
         self._triton_config = TritonConfig(
-            grpc_address=self.host,
-            http_address=self.host,
+            grpc_address=self.host if self.enable_grpc else None,
+            http_address=self.host if self.enable_http else None,
             metrics_address=self.host,
-            grpc_port=self.grpc_port,
-            http_port=self.http_port,
+            grpc_port=self.grpc_port if self.enable_grpc else None,
+            http_port=self.http_port if self.enable_http else None,
             metrics_port=self.metrics_port,
             log_verbose=self.log_verbose,
         )
@@ -267,8 +273,12 @@ class VLMTritonServer(BaseServer):
         )
 
         # Start serving (this will block)
-        print(f"Serving model '{self.model_name}' on gRPC {self.host}:{self.grpc_port}, "
-              f"HTTP {self.host}:{self.http_port} ...")
+        protocols = []
+        if self.enable_grpc:
+            protocols.append(f"gRPC {self.host}:{self.grpc_port}")
+        if self.enable_http:
+            protocols.append(f"HTTP {self.host}:{self.http_port}")
+        print(f"Serving model '{self.model_name}' on {', '.join(protocols)} ...")
         self.running = True
         self._triton.serve()
 
@@ -290,11 +300,11 @@ class VLMTritonServer(BaseServer):
         """Context manager entry."""
         # Create config and triton instance
         self._triton_config = TritonConfig(
-            grpc_address=self.host,
-            http_address=self.host,
+            grpc_address=self.host if self.enable_grpc else None,
+            http_address=self.host if self.enable_http else None,
             metrics_address=self.host,
-            grpc_port=self.grpc_port,
-            http_port=self.http_port,
+            grpc_port=self.grpc_port if self.enable_grpc else None,
+            http_port=self.http_port if self.enable_http else None,
             metrics_port=self.metrics_port,
             log_verbose=self.log_verbose,
         )
@@ -317,8 +327,12 @@ class VLMTritonServer(BaseServer):
             strict=True,
         )
 
-        print(f"Serving model '{self.model_name}' on gRPC {self.host}:{self.grpc_port}, "
-              f"HTTP {self.host}:{self.http_port} ...")
+        protocols = []
+        if self.enable_grpc:
+            protocols.append(f"gRPC {self.host}:{self.grpc_port}")
+        if self.enable_http:
+            protocols.append(f"HTTP {self.host}:{self.http_port}")
+        print(f"Serving model '{self.model_name}' on {', '.join(protocols)} ...")
         self.running = True
 
         return self._triton

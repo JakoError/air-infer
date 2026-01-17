@@ -26,13 +26,13 @@ def my_inference_function(media=None, **kwargs):
         High-level Python object (e.g., dict). It will be encoded to tensors by the server.
     """
     media = media or []
-    
+
     # Example: derive some simple metadata
     num_items = len(media)
     num_images = sum(1 for m in media if not isinstance(m, (list, tuple)) and not isinstance(m, str))
     num_videos = sum(1 for m in media if isinstance(m, (list, tuple)))
     num_urls = sum(1 for m in media if isinstance(m, str))
-    
+
     # Prepare results
     results = {
         "num_items": num_items,
@@ -42,7 +42,7 @@ def my_inference_function(media=None, **kwargs):
         "kwargs": kwargs,
         "status": "success",
     }
-    
+
     # Return high-level result; server will encode it to RESULTS_JSON
     return results
 
@@ -59,18 +59,17 @@ def main():
         metrics_port=8101,
         log_verbose=0,
     )
-    
+
     # Start serving (blocks until interrupted)
     print("Starting server...")
-    
+
     # Use context manager (recommended)
     with server as triton:
         triton.serve()  # This will block and serve requests until interrupted
-    
+
     # Or use start() method directly
     # server.start()  # This blocks
 
 
 if __name__ == "__main__":
     main()
-

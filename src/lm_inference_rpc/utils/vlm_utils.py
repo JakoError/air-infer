@@ -28,6 +28,7 @@ import json
 
 try:
     from PIL import Image as PIL_Image
+
     PIL_AVAILABLE = True
 except ImportError:
     PIL_AVAILABLE = False
@@ -164,8 +165,8 @@ def array_to_pil_image(arr: np.ndarray) -> PIL_Image.Image:
 
 
 def encode_request(
-    media: Optional[Union[List, Sequence, Any]] = None,
-    **kwargs
+        media: Optional[Union[List, Sequence, Any]] = None,
+        **kwargs
 ) -> Dict[str, np.ndarray]:
     """
     Encode high-level request (media + kwargs) into input tensors for the server.
@@ -279,7 +280,7 @@ def encode_request(
     if len(url_list) > 0:
         # Convert URLs to bytes tensor
         url_bytes = np.array([url.encode('utf-8')
-                             for url in url_list], dtype=np.object_)
+                              for url in url_list], dtype=np.object_)
         inputs["MEDIA_URLS"] = url_bytes
     else:
         # Empty array with shape (0,)
@@ -305,10 +306,10 @@ def encode_request(
 
 
 def tensors_to_media(
-    IMAGE: Optional[np.ndarray] = None,
-    VIDEO: Optional[np.ndarray] = None,
-    MEDIA_URLS: Optional[np.ndarray] = None,
-    MEDIA_MASK: Optional[np.ndarray] = None,
+        IMAGE: Optional[np.ndarray] = None,
+        VIDEO: Optional[np.ndarray] = None,
+        MEDIA_URLS: Optional[np.ndarray] = None,
+        MEDIA_MASK: Optional[np.ndarray] = None,
 ) -> List[Tuple[str, Union[Any, str], Optional[dict]]]:
     """
     Reconstruct media items from input tensors using MEDIA_MASK.
@@ -409,11 +410,11 @@ def tensors_to_media(
 
 
 def decode_request_tensors(
-    IMAGE: Optional[np.ndarray] = None,
-    VIDEO: Optional[np.ndarray] = None,
-    MEDIA_URLS: Optional[np.ndarray] = None,
-    MEDIA_MASK: Optional[np.ndarray] = None,
-    ARGS_JSON: Optional[np.ndarray] = None,
+        IMAGE: Optional[np.ndarray] = None,
+        VIDEO: Optional[np.ndarray] = None,
+        MEDIA_URLS: Optional[np.ndarray] = None,
+        MEDIA_MASK: Optional[np.ndarray] = None,
+        ARGS_JSON: Optional[np.ndarray] = None,
 ) -> Tuple[List[Any], Dict[str, Any]]:
     """
     Decode raw input tensors into high-level media list and kwargs.
