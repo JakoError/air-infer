@@ -1,4 +1,4 @@
-# LM Inference RPC
+# Air-Infer
 
 A Python package providing client-server communication utilities for VLM/LLM inference and ROS2 message transmission using PyTriton.
 
@@ -383,3 +383,9 @@ If deserialization fails:
 ## 📄 License
 
 MIT
+
+## 👥 Contributing
+
+Zhexian(Jako) Zhou, Yaoyu Hu
+
+[**@AirLab CMU**](https://theairlab.org/)
