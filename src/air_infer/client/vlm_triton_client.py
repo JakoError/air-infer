@@ -50,8 +50,10 @@ class VLMTritonClient(BaseClient):
         if url is None:
             if protocol == "grpc":
                 url = f"grpc://{host}:{grpc_port}"
-            else:
+            elif protocol == "http":
                 url = f"http://{host}:{http_port}"
+            else:
+                raise ValueError(f"Unsupported protocol: {protocol}")
 
         self.url = url
         self._client: Optional[ModelClient] = None

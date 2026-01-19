@@ -525,7 +525,7 @@ def decode_response_tensors(outputs: Dict[str, Any]) -> Any:
 
     Returns:
         Decoded Python object (usually a dict). If RESULTS_JSON is present,
-        returns the JSON-decoded content. Otherwise returns outputs as-is.
+        returns the JSON-decoded content. Otherwise, returns outputs as-is.
     """
     if "RESULTS_JSON" not in outputs:
         return outputs

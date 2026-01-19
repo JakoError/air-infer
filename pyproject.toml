@@ -27,7 +27,8 @@ classifiers = [
 dependencies = [
     "numpy",
     "nvidia-pytriton>=0.7.0",
-    "tritonclient[grpc]",
+    "tritonclient[grpc]==2.64.0",
+    "grpcio==1.67.1",
 ]
 
 [project.optional-dependencies]
