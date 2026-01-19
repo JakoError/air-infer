@@ -5,7 +5,7 @@ This example shows how to use TritonClient with media (images, videos, URLs)
 and additional arguments that are automatically packed into JSON.
 """
 from PIL import Image
-from lm_inference_rpc.client import VLMTritonClient
+from air_infer.client import VLMTritonClient
 
 
 def main():

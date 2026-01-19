@@ -3,7 +3,7 @@ Tests for server module.
 """
 
 # import pytest
-# from lm_inference_rpc.server import BaseServer
+# from air_infer.server import BaseServer
 
 
 # def test_base_server_initialization():

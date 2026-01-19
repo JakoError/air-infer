@@ -4,7 +4,7 @@ Example server usage using TritonServer.
 This example shows how to use TritonServer with an inference function
 that processes media (images, videos, URLs) and JSON arguments.
 """
-from lm_inference_rpc.server import VLMTritonServer
+from air_infer.server import VLMTritonServer
 
 
 def my_inference_function(media=None, **kwargs):

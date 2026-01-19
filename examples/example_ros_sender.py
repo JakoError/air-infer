@@ -15,7 +15,7 @@ except ImportError:
     print("ROS2 messages not available. Install ROS2 or source the workspace.")
     sys.exit(1)
 
-from lm_inference_rpc.client import ROSTritonSender
+from air_infer.client import ROSTritonSender
 
 
 def main():

@@ -3,7 +3,7 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "lm-inference-rpc"
+name = "air-infer"
 version = "0.1.0"
 description = "VLM/LLM client-server communication utilities"
 readme = "README.md"

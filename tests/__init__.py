@@ -1,3 +1,3 @@
 """
-Tests for lm_inference_rpc package.
+Tests for air_infer package.
 """

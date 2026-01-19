@@ -3,7 +3,7 @@ Tests for client module.
 """
 
 # import pytest
-# from lm_inference_rpc.client import BaseClient
+# from air_infer.client import BaseClient
 
 
 # def test_base_client_initialization():

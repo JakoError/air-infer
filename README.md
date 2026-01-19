@@ -35,7 +35,7 @@ source /opt/ros/humble/setup.bash
 ## 📁 Structure
 
 ```
-lm_inference_rpc/
+air_infer/
 ├── client/           # Client-side utilities
 │   ├── BaseClient         # Base class for client implementations
 │   ├── VLMTritonClient    # VLM/LLM client using PyTriton
@@ -58,7 +58,7 @@ lm_inference_rpc/
 The `ROSTritonSender` serializes ROS2 messages and sends them to the server.
 
 ```python
-from lm_inference_rpc.client import ROSTritonSender
+from air_infer.client import ROSTritonSender
 from std_msgs.msg import String
 
 # Create client
@@ -81,7 +81,7 @@ with client:
 The `ROSTritonReceiver` deserializes ROS2 messages and calls your handler function.
 
 ```python
-from lm_inference_rpc.server import ROSTritonReceiver
+from air_infer.server import ROSTritonReceiver
 from std_msgs.msg import String
 
 def message_handler(message):
@@ -114,7 +114,7 @@ with server:
 #### Client
 
 ```python
-from lm_inference_rpc.client import VLMTritonClient
+from air_infer.client import VLMTritonClient
 from PIL import Image
 
 class MyClient(VLMTritonClient):
@@ -134,7 +134,7 @@ with client:
 #### Server
 
 ```python
-from lm_inference_rpc.server import VLMTritonServer
+from air_infer.server import VLMTritonServer
 from pytriton.model_config import Tensor
 import numpy as np
 

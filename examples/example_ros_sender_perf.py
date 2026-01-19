@@ -24,7 +24,7 @@ except ImportError:
     print("ROS2 messages not available. Install ROS2 or source the workspace.")
     sys.exit(1)
 
-from lm_inference_rpc.client import ROSTritonSender
+from air_infer.client import ROSTritonSender
 
 
 class PerformanceRecorder:
@@ -280,7 +280,7 @@ def run_performance_test(
             latency = msg_end_time - msg_start_time
 
             # Get actual serialized message size
-            from lm_inference_rpc.utils.ros_utils import serialize_ros_message
+            from air_infer.utils.ros_utils import serialize_ros_message
             actual_size = len(serialize_ros_message(msg))
 
             # Extract verification result

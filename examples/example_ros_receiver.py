@@ -19,7 +19,7 @@ except ImportError:
     print("ROS2 messages not available. Install ROS2 or source the workspace.")
     sys.exit(1)
 
-from lm_inference_rpc.server import ROSTritonReceiver
+from air_infer.server import ROSTritonReceiver
 
 # Global counter for validation
 received_messages = []
