@@ -10,6 +10,7 @@ from pytriton.triton import Triton, TritonConfig
 from .base_server import BaseServer
 from ..utils.ros_utils import deserialize_ros_message
 from ..utils.verification import compute_message_checksum
+from ..utils.triton_manager import TritonInstanceManager
 
 
 class ROSTritonReceiver(BaseServer):
@@ -76,6 +77,7 @@ class ROSTritonReceiver(BaseServer):
 
         self._triton: Optional[Triton] = None
         self._triton_config: Optional[TritonConfig] = None
+        self._is_new_instance: bool = False
 
     def get_input_schema(self) -> List[Tensor]:
         """
@@ -182,19 +184,18 @@ class ROSTritonReceiver(BaseServer):
         if self.running:
             raise RuntimeError("Server is already running")
 
-        # Create Triton configuration
-        self._triton_config = TritonConfig(
-            grpc_address=self.host if self.enable_grpc else None,
-            http_address=self.host if self.enable_http else None,
-            metrics_address=self.host,
-            grpc_port=self.grpc_port if self.enable_grpc else None,
-            http_port=self.http_port if self.enable_http else None,
-            metrics_port=self.metrics_port,
-            log_verbose=self.log_verbose,
+        # Get or create Triton instance (shared across models with same config)
+        self._triton, self._triton_config, self._is_new_instance = (
+            TritonInstanceManager.get_or_create_triton(
+                host=self.host,
+                grpc_port=self.grpc_port if self.enable_grpc else None,
+                http_port=self.http_port if self.enable_http else None,
+                metrics_port=self.metrics_port,
+                log_verbose=self.log_verbose,
+                enable_grpc=self.enable_grpc,
+                enable_http=self.enable_http,
+            )
         )
-
-        # Create Triton instance
-        self._triton = Triton(config=self._triton_config)
 
         # Get input and output schemas
         inputs = self.get_input_schema()
@@ -203,7 +204,7 @@ class ROSTritonReceiver(BaseServer):
         # Create wrapped inference function
         infer_func = self._create_inference_wrapper()
 
-        # Bind model
+        # Bind model to the Triton instance
         self._triton.bind(
             model_name=self.model_name,
             infer_func=infer_func,
@@ -214,42 +215,66 @@ class ROSTritonReceiver(BaseServer):
         )
 
         # Start serving (this will block)
+        # Only call serve() if this is a new instance or if not already serving
         protocols = []
         if self.enable_grpc:
             protocols.append(f"gRPC {self.host}:{self.grpc_port}")
         if self.enable_http:
             protocols.append(f"HTTP {self.host}:{self.http_port}")
-        print(f"Serving model '{self.model_name}' on {', '.join(protocols)} ...")
-        self.running = True
-        self._triton.serve()
+        
+        # Atomically check and mark as serving
+        should_serve = TritonInstanceManager.check_and_mark_serving(
+            host=self.host,
+            grpc_port=self.grpc_port if self.enable_grpc else None,
+            http_port=self.http_port if self.enable_http else None,
+            metrics_port=self.metrics_port,
+        )
+        
+        if should_serve:
+            if self._is_new_instance:
+                print(f"Serving model '{self.model_name}' on {', '.join(protocols)} ...")
+            else:
+                print(f"Serving model '{self.model_name}' on existing Triton instance ({', '.join(protocols)}) ...")
+            self.running = True
+            self._triton.serve()
+        else:
+            print(f"Bound model '{self.model_name}' to existing Triton instance on {', '.join(protocols)} ...")
+            print(f"Triton instance is already serving. Model '{self.model_name}' is ready.")
+            self.running = True
 
     def stop(self):
         """Stop the Triton server."""
         if not self.running:
             return
 
+        # Release reference to Triton instance
         if self._triton is not None:
-            # Triton context manager handles cleanup
-            # If using context manager, this is handled automatically
-            pass
+            TritonInstanceManager.release_triton(
+                host=self.host,
+                grpc_port=self.grpc_port if self.enable_grpc else None,
+                http_port=self.http_port if self.enable_http else None,
+                metrics_port=self.metrics_port,
+            )
 
         self.running = False
         self._triton = None
         self._triton_config = None
+        self._is_new_instance = False
 
     def __enter__(self):
         """Context manager entry."""
-        # Create config and triton instance
-        self._triton_config = TritonConfig(
-            grpc_address=self.host if self.enable_grpc else None,
-            http_address=self.host if self.enable_http else None,
-            metrics_address=self.host,
-            grpc_port=self.grpc_port if self.enable_grpc else None,
-            http_port=self.http_port if self.enable_http else None,
-            metrics_port=self.metrics_port,
-            log_verbose=self.log_verbose,
+        # Get or create Triton instance (shared across models with same config)
+        self._triton, self._triton_config, self._is_new_instance = (
+            TritonInstanceManager.get_or_create_triton(
+                host=self.host,
+                grpc_port=self.grpc_port if self.enable_grpc else None,
+                http_port=self.http_port if self.enable_http else None,
+                metrics_port=self.metrics_port,
+                log_verbose=self.log_verbose,
+                enable_grpc=self.enable_grpc,
+                enable_http=self.enable_http,
+            )
         )
-        self._triton = Triton(config=self._triton_config)
 
         # Get input and output schemas
         inputs = self.get_input_schema()
@@ -258,7 +283,7 @@ class ROSTritonReceiver(BaseServer):
         # Create wrapped inference function
         infer_func = self._create_inference_wrapper()
 
-        # Bind model
+        # Bind model to the Triton instance
         self._triton.bind(
             model_name=self.model_name,
             infer_func=infer_func,
@@ -273,12 +298,28 @@ class ROSTritonReceiver(BaseServer):
             protocols.append(f"gRPC {self.host}:{self.grpc_port}")
         if self.enable_http:
             protocols.append(f"HTTP {self.host}:{self.http_port}")
-        print(f"Serving receiver '{self.model_name}' on {', '.join(protocols)} ...")
+        
+        if self._is_new_instance:
+            print(f"Serving receiver '{self.model_name}' on {', '.join(protocols)} ...")
+        else:
+            print(f"Bound receiver '{self.model_name}' to existing Triton instance on {', '.join(protocols)} ...")
+        
         self.running = True
 
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Context manager exit."""
+        # Release reference to Triton instance
+        if self._triton is not None:
+            TritonInstanceManager.release_triton(
+                host=self.host,
+                grpc_port=self.grpc_port if self.enable_grpc else None,
+                http_port=self.http_port if self.enable_http else None,
+                metrics_port=self.metrics_port,
+            )
         self.running = False
+        self._triton = None
+        self._triton_config = None
+        self._is_new_instance = False
         # Triton context manager handles cleanup automatically
