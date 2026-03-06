@@ -4,7 +4,12 @@ from pytriton.client import ModelClient
 
 
 def main():
-    client = ModelClient("grpc://127.0.0.1:9100", "EchoText", lazy_init=False)
+    client = ModelClient(
+        "grpc://127.0.0.1:9100",
+        "EchoText",
+        lazy_init=False,
+        inference_timeout_s=240.0,
+    )
     client.wait_for_model(timeout_s=10)
 
     img = np.random.randint(0, 256, size=(224, 224, 3), dtype=np.uint8)

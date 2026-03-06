@@ -27,6 +27,7 @@ class ROSTritonSender(BaseClient):
             protocol: str = "grpc",
             lazy_init: bool = False,
             timeout_s: int = 10,
+            inference_timeout_s: Optional[float] = None,
     ):
         """
         Initialize the Triton client.
@@ -40,12 +41,14 @@ class ROSTritonSender(BaseClient):
             protocol: Communication protocol ("grpc" or "http")
             lazy_init: If True, delay connection until first inference
             timeout_s: Timeout in seconds for waiting for model
+            inference_timeout_s: Timeout in seconds for waiting for inference
         """
         super().__init__(host=host, port=grpc_port)
         self.model_name = model_name
         self.protocol = protocol
         self.lazy_init = lazy_init
         self.timeout_s = timeout_s
+        self.inference_timeout_s = inference_timeout_s
 
         # Build URL if not provided
         if url is None:
@@ -60,10 +63,16 @@ class ROSTritonSender(BaseClient):
     def connect(self):
         """Establish connection to the Triton server."""
         if self._client is None:
+            client_kwargs = {
+                "lazy_init": self.lazy_init,
+            }
+            if self.inference_timeout_s is not None:
+                client_kwargs["inference_timeout_s"] = self.inference_timeout_s
+
             self._client = ModelClient(
                 self.url,
                 self.model_name,
-                lazy_init=self.lazy_init
+                **client_kwargs,
             )
             if not self.lazy_init:
                 self._client.wait_for_model(timeout_s=self.timeout_s)
