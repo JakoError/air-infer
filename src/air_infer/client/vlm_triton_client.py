@@ -3,6 +3,7 @@ Triton client implementation using PyTriton.
 """
 from typing import Dict, Any, Optional
 from pytriton.client import ModelClient
+from pytriton.client.exceptions import PyTritonClientInferenceServerError
 
 from .base_client import BaseClient
 from ..utils.vlm_utils import encode_request, decode_response_tensors
@@ -27,6 +28,8 @@ class VLMTritonClient(BaseClient):
             lazy_init: bool = False,
             timeout_s: int = 10,
             inference_timeout_s: Optional[float] = None,
+            retry_unhealthy_stub: bool = True,
+            max_retries: Optional[int] = None,
     ):
         """
         Initialize the Triton client.
@@ -41,6 +44,8 @@ class VLMTritonClient(BaseClient):
             lazy_init: If True, delay connection until first inference
             timeout_s: Timeout in seconds for waiting for model
             inference_timeout_s: Timeout in seconds for waiting for inference
+            retry_unhealthy_stub: If True, recreate the client and retry when PyTriton reports an unhealthy stub
+            max_retries: Max retries after recreating the client (None = infinite). Only applies to unhealthy-stub failures.
         """
         super().__init__(host=host, port=grpc_port)
         self.model_name = model_name
@@ -48,6 +53,8 @@ class VLMTritonClient(BaseClient):
         self.lazy_init = lazy_init
         self.timeout_s = timeout_s
         self.inference_timeout_s = inference_timeout_s
+        self.retry_unhealthy_stub = retry_unhealthy_stub
+        self.max_retries = None if max_retries is None else max(0, int(max_retries))
 
         # Build URL if not provided
         if url is None:
@@ -102,10 +109,29 @@ class VLMTritonClient(BaseClient):
         if self._client is None:
             raise RuntimeError("Client not initialized. Call connect() first.")
 
-        # Use infer_sample for single sample inference
-        # Override this method if you need batch inference (infer_batch)
-        response = self._client.infer_sample(**request)
-        return response
+        # Use infer_sample for single sample inference.
+        # PyTriton may mark the local "stub" worker unhealthy after a timeout/crash;
+        # in that case, recreating the ModelClient is the simplest recovery.
+        attempt = 0
+        while True:
+            try:
+                return self._client.infer_sample(**request)
+            except PyTritonClientInferenceServerError as e:
+                msg = str(e)
+                unhealthy_stub = ("Stub process" in msg) and ("not healthy" in msg)
+                if (
+                    unhealthy_stub
+                    and self.retry_unhealthy_stub
+                    and (self.max_retries is None or attempt < self.max_retries)
+                ):
+                    attempt += 1
+                    # Recreate client (and wait for model if not lazy)
+                    try:
+                        self.disconnect()
+                    finally:
+                        self.connect()
+                    continue
+                raise
 
     def infer(self, **kwargs) -> Dict[str, Any]:
         """
