@@ -74,6 +74,8 @@ class VLMTritonClient(BaseClient):
             client_kwargs = {
                 "lazy_init": self.lazy_init,
             }
+            if self.lazy_init:
+                client_kwargs["init_timeout_s"] = float(self.timeout_s)
             if self.inference_timeout_s is not None:
                 client_kwargs["inference_timeout_s"] = self.inference_timeout_s
 
@@ -83,7 +85,12 @@ class VLMTritonClient(BaseClient):
                 **client_kwargs,
             )
             if not self.lazy_init:
-                self._client.wait_for_model(timeout_s=self.timeout_s)
+                try:
+                    self._client.wait_for_model(float(self.timeout_s))
+                except Exception:
+                    self._client = None
+                    self._connected = False
+                    raise
             self._connected = True
 
     def disconnect(self):
