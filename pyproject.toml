@@ -7,9 +7,11 @@ name = "air-infer"
 version = "0.1.0"
 description = "VLM/LLM client-server communication utilities"
 readme = "README.md"
-requires-python = ">=3.8"
 license = {text = "MIT"}
 authors = [
+    {name = "Zhexian Zhou", email = "jakozhou@gmail.com"}
+]
+maintainers = [
     {name = "Zhexian Zhou", email = "jakozhou@gmail.com"}
 ]
 classifiers = [
@@ -33,8 +35,6 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "pytest>=7.0",
-    "pytest-cov>=4.0",
     "black>=23.0",
     "flake8>=6.0",
     "mypy>=1.0",
@@ -49,10 +49,3 @@ where = ["src"]
 [tool.black]
 line-length = 100
 target-version = ['py38']
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-python_files = "test_*.py"
-python_classes = "Test*"
-python_functions = "test_*"
-
