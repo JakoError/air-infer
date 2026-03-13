@@ -26,7 +26,7 @@ class VLMTritonClient(BaseClient):
             http_port: int = 8100,
             protocol: str = "grpc",
             lazy_init: bool = False,
-            timeout_s: int = 10,
+            timeout_s: Optional[float] = None,
             inference_timeout_s: Optional[float] = None,
             retry_unhealthy_stub: bool = True,
             max_retries: Optional[int] = None,
@@ -74,7 +74,7 @@ class VLMTritonClient(BaseClient):
             client_kwargs = {
                 "lazy_init": self.lazy_init,
             }
-            if self.lazy_init:
+            if self.lazy_init and self.timeout_s is not None:
                 client_kwargs["init_timeout_s"] = float(self.timeout_s)
             if self.inference_timeout_s is not None:
                 client_kwargs["inference_timeout_s"] = self.inference_timeout_s
